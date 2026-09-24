@@ -21,6 +21,7 @@
 
 #include "base_resource_editor.h"
 #include "item_stack_selector.h"
+#include "resource_id_editor.h"
 
 using namespace godot;
 
@@ -38,6 +39,7 @@ private:
 	InventoryDatabase *database;
 	
 	// UI Components
+	ResourceIDEditor *id_editor;
 	SpinBox *time_to_craft_spin_box;
 	OptionButton *craft_station_type_option_button;
 	VBoxContainer *ingredients_container;
@@ -70,6 +72,7 @@ private:
 	Button* _create_remove_button(HBoxContainer* p_parent, const String& p_tooltip, const Callable& p_callback);
 	
 	// Signal handlers
+	void _on_id_changed(const String &p_id);
 	void _on_time_to_craft_changed(double p_value);
 	void _on_craft_station_selected(int p_index);
 	void _on_new_ingredient_pressed();

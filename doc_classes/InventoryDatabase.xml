@@ -164,6 +164,13 @@
 				Returns a new valid identifier for the [ItemDefinition]. This method does not return ids that already exist.
 			</description>
 		</method>
+		<method name="get_recipe_from_id" qualifiers="const">
+			<return type="Recipe" />
+			<param index="0" name="id" type="String" />
+			<description>
+				Returns the [Recipe] whose [member Recipe.id] is [param id], or [code]null[/code] if there is none.
+			</description>
+		</method>
 		<method name="get_valid_id" qualifiers="const">
 			<return type="String" />
 			<description>
@@ -199,6 +206,13 @@
 			<return type="bool" />
 			<param index="0" name="id" type="String" />
 			<description>
+			</description>
+		</method>
+		<method name="has_recipe_id" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="id" type="String" />
+			<description>
+				Returns [code]true[/code] if a [Recipe] in [member recipes] has [member Recipe.id] equal to [param id].
 			</description>
 		</method>
 		<method name="import_from_invdata">

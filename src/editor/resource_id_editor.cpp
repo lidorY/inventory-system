@@ -31,6 +31,7 @@ void ResourceIDEditor::_bind_methods() {
     BIND_ENUM_CONSTANT(RESOURCE_TYPE_ITEM_CATEGORY);
     BIND_ENUM_CONSTANT(RESOURCE_TYPE_CRAFT_STATION_TYPE);
     BIND_ENUM_CONSTANT(RESOURCE_TYPE_LOOT);
+    BIND_ENUM_CONSTANT(RESOURCE_TYPE_RECIPE);
 
     ADD_SIGNAL(MethodInfo("changed", PropertyInfo(Variant::STRING, "id")));
 }
@@ -172,6 +173,8 @@ bool ResourceIDEditor::has_in_database(const String& p_id) const {
             return database->has_craft_station_type_id(p_id);
         case RESOURCE_TYPE_LOOT:
             return database->has_loot_id(p_id);
+        case RESOURCE_TYPE_RECIPE:
+            return database->has_recipe_id(p_id);
         default:
             return false;
     }

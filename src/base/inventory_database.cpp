@@ -56,6 +56,7 @@ void InventoryDatabase::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("has_item_name", "name"), &InventoryDatabase::has_item_name);
 	ClassDB::bind_method(D_METHOD("has_craft_station_type_id", "id"), &InventoryDatabase::has_craft_station_type_id);
 	ClassDB::bind_method(D_METHOD("has_loot_id", "id"), &InventoryDatabase::has_loot_id);
+	ClassDB::bind_method(D_METHOD("has_recipe_id", "id"), &InventoryDatabase::has_recipe_id);
 	ClassDB::bind_method(D_METHOD("get_valid_id"), &InventoryDatabase::get_valid_id);
 	ClassDB::bind_method(D_METHOD("get_new_valid_id"), &InventoryDatabase::get_new_valid_id);
 	ClassDB::bind_method(D_METHOD("get_category", "code"), &InventoryDatabase::get_category);
@@ -73,6 +74,7 @@ void InventoryDatabase::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_category_from_id", "id"), &InventoryDatabase::get_category_from_id);
 	ClassDB::bind_method(D_METHOD("get_craft_station_from_id", "id"), &InventoryDatabase::get_craft_station_from_id);
 	ClassDB::bind_method(D_METHOD("get_loot_from_id", "id"), &InventoryDatabase::get_loot_from_id);
+	ClassDB::bind_method(D_METHOD("get_recipe_from_id", "id"), &InventoryDatabase::get_recipe_from_id);
 
 	ClassDB::bind_method(D_METHOD("add_item"), &InventoryDatabase::add_item);
 	ClassDB::bind_method(D_METHOD("add_item_category"), &InventoryDatabase::add_item_category);
@@ -257,6 +259,15 @@ bool InventoryDatabase::has_loot_id(String id) const {
 	return false;
 }
 
+bool InventoryDatabase::has_recipe_id(String id) const {
+	for (size_t i = 0; i < recipes.size(); i++) {
+		Ref<Recipe> recipe = recipes[i];
+		if (recipe.is_valid() && recipe->get_id() == id)
+			return true;
+	}
+	return false;
+}
+
 String InventoryDatabase::get_valid_id() const {
 	for (size_t i = 0; i < items.size(); i++) {
 		Ref<ItemDefinition> item = items[i];
@@ -434,6 +445,8 @@ void InventoryDatabase::deserialize_item_category(Ref<ItemCategory> category, co
 
 Dictionary InventoryDatabase::serialize_recipe(const Ref<Recipe> recipe) const {
 	Dictionary data = Dictionary();
+	if (!recipe->get_id().is_empty())
+		data["id"] = recipe->get_id();
 	if (!recipe->get_products().is_empty())
 		data["products"] = serialize_item_stacks(recipe->get_products());
 	data["time_to_craft"] = recipe->get_time_to_craft();
@@ -448,6 +461,9 @@ Dictionary InventoryDatabase::serialize_recipe(const Ref<Recipe> recipe) const {
 }
 
 void InventoryDatabase::deserialize_recipe(Ref<Recipe> recipe, const Dictionary data) const {
+	if (data.has("id")) {
+		recipe->set_id(data["id"]);
+	}
 	if (data.has("products")) {
 		TypedArray<ItemStack> item_stacks = recipe->get_products();
 		deserialize_item_stacks(item_stacks, data["products"]);
@@ -603,6 +619,15 @@ Ref<Loot> InventoryDatabase::get_loot_from_id(String id) const {
 		Ref<Loot> loot = loots[i];
 		if (loot.is_valid() && loot->get_id() == id)
 			return loot;
+	}
+	return nullptr;
+}
+
+Ref<Recipe> InventoryDatabase::get_recipe_from_id(String id) const {
+	for (size_t i = 0; i < recipes.size(); i++) {
+		Ref<Recipe> recipe = recipes[i];
+		if (recipe.is_valid() && recipe->get_id() == id)
+			return recipe;
 	}
 	return nullptr;
 }

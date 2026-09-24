@@ -60,6 +60,7 @@ public:
 	bool has_item_name(String name) const;
 	bool has_craft_station_type_id(String id) const;
 	bool has_loot_id(String id) const;
+	bool has_recipe_id(String id) const;
 	String get_valid_id() const;
 	String get_new_valid_id() const;
 	Ref<ItemCategory> get_category(int code);
@@ -97,6 +98,7 @@ public:
 	Ref<ItemCategory> get_category_from_id(String id) const;
 	Ref<CraftStationType> get_craft_station_from_id(String id) const;
 	Ref<Loot> get_loot_from_id(String id) const;
+	Ref<Recipe> get_recipe_from_id(String id) const;
 
 	Dictionary serialize() const;
 	void deserialize(const Dictionary data);

@@ -10,6 +10,9 @@
 	<tutorials>
 	</tutorials>
 	<members>
+		<member name="id" type="String" setter="set_id" getter="get_id" default="&quot;&quot;">
+			Unique identifier of this recipe in the [InventoryDatabase]. Use [method InventoryDatabase.get_recipe_from_id] to look a recipe up by it.
+		</member>
 		<member name="ingredients" type="ItemStack[]" setter="set_ingredients" getter="get_ingredients" default="[]">
 			[ItemStack] list for items needed for crafting. If [member CraftStation.only_remove_ingredients_after_craft] is true these items are removed from [Inventory] after crafting, if false will be removed at the beginning of the crafting process, after calling [method CraftStation.craft].
 		</member>

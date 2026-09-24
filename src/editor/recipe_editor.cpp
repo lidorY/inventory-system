@@ -25,6 +25,7 @@
 using namespace godot;
 
 void RecipeEditor::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("_on_id_changed", "id"), &RecipeEditor::_on_id_changed);
 	ClassDB::bind_method(D_METHOD("_on_time_to_craft_changed", "value"), &RecipeEditor::_on_time_to_craft_changed);
 	ClassDB::bind_method(D_METHOD("_on_craft_station_selected", "index"), &RecipeEditor::_on_craft_station_selected);
 	ClassDB::bind_method(D_METHOD("_on_new_ingredient_pressed"), &RecipeEditor::_on_new_ingredient_pressed);
@@ -44,6 +45,7 @@ void RecipeEditor::_bind_methods() {
 RecipeEditor::RecipeEditor() : BaseResourceEditor() {
 	editor_plugin = nullptr;
 	database = nullptr;
+	id_editor = nullptr;
 	signals_connected = false;
 	
 	set_custom_minimum_size(Vector2(0, 384));
@@ -66,6 +68,12 @@ void RecipeEditor::_create_ui() {
 	// Apply specific settings for recipe editor
 	scroll_container->set_horizontal_scroll_mode(ScrollContainer::SCROLL_MODE_DISABLED);
 	scroll_container->set_visible(false);
+
+	// ID comes first, as in the other resource editors
+	id_editor = memnew(ResourceIDEditor);
+	main_vbox->add_child(id_editor);
+	id_editor->set_resource_type(ResourceIDEditor::RESOURCE_TYPE_RECIPE);
+	id_editor->connect("changed", callable_mp(this, &RecipeEditor::_on_id_changed));
 
 	// First separator (at top, matching GDScript)
 	HSeparator *separator1 = memnew(HSeparator);
@@ -220,6 +228,7 @@ void RecipeEditor::load_recipe(const Ref<Recipe> &p_recipe, InventoryDatabase *p
 	scroll_container->set_visible(true);
 
 	// Update UI with recipe data
+	id_editor->setup(database, recipe->get_id());
 	time_to_craft_spin_box->set_value(recipe->get_time_to_craft());
 	
 	_setup_station();
@@ -418,6 +427,13 @@ Button* RecipeEditor::_create_remove_button(HBoxContainer* p_parent, const Strin
 }
 
 // Signal handlers
+void RecipeEditor::_on_id_changed(const String &p_id) {
+	if (recipe.is_valid() && id_editor) {
+		recipe->set_id(id_editor->get_id());
+		emit_signal("changed");
+	}
+}
+
 void RecipeEditor::_on_time_to_craft_changed(double p_value) {
 	if (recipe.is_valid()) {
 		recipe->set_time_to_craft((float)p_value);
