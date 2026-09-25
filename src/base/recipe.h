@@ -17,6 +17,7 @@ private:
 	Ref<CraftStationType> station;
 	TypedArray<ItemStack> ingredients;
 	TypedArray<ItemStack> required_items;
+	bool blueprint_only = false;
 
 protected:
 	static void _bind_methods();
@@ -36,6 +37,8 @@ public:
 	TypedArray<ItemStack> get_ingredients() const;
 	void set_required_items(const TypedArray<ItemStack> &new_required_items);
 	TypedArray<ItemStack> get_required_items() const;
+	void set_blueprint_only(const bool &new_blueprint_only);
+	bool is_blueprint_only() const;
 };
 
 #endif // RECIPE_CLASS_H

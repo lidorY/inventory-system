@@ -18,6 +18,7 @@
 #include <godot_cpp/classes/spin_box.hpp>
 #include <godot_cpp/classes/option_button.hpp>
 #include <godot_cpp/classes/button.hpp>
+#include <godot_cpp/classes/check_box.hpp>
 
 #include "base_resource_editor.h"
 #include "item_stack_selector.h"
@@ -41,6 +42,7 @@ private:
 	// UI Components
 	ResourceIDEditor *id_editor;
 	SpinBox *time_to_craft_spin_box;
+	CheckBox *blueprint_only_check_box;
 	OptionButton *craft_station_type_option_button;
 	VBoxContainer *ingredients_container;
 	VBoxContainer *products_container;
@@ -74,6 +76,7 @@ private:
 	// Signal handlers
 	void _on_id_changed(const String &p_id);
 	void _on_time_to_craft_changed(double p_value);
+	void _on_blueprint_only_toggled(bool p_pressed);
 	void _on_craft_station_selected(int p_index);
 	void _on_new_ingredient_pressed();
 	void _on_new_product_pressed();

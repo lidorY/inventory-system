@@ -27,6 +27,7 @@ using namespace godot;
 void RecipeEditor::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_on_id_changed", "id"), &RecipeEditor::_on_id_changed);
 	ClassDB::bind_method(D_METHOD("_on_time_to_craft_changed", "value"), &RecipeEditor::_on_time_to_craft_changed);
+	ClassDB::bind_method(D_METHOD("_on_blueprint_only_toggled", "pressed"), &RecipeEditor::_on_blueprint_only_toggled);
 	ClassDB::bind_method(D_METHOD("_on_craft_station_selected", "index"), &RecipeEditor::_on_craft_station_selected);
 	ClassDB::bind_method(D_METHOD("_on_new_ingredient_pressed"), &RecipeEditor::_on_new_ingredient_pressed);
 	ClassDB::bind_method(D_METHOD("_on_new_product_pressed"), &RecipeEditor::_on_new_product_pressed);
@@ -46,6 +47,7 @@ RecipeEditor::RecipeEditor() : BaseResourceEditor() {
 	editor_plugin = nullptr;
 	database = nullptr;
 	id_editor = nullptr;
+	blueprint_only_check_box = nullptr;
 	signals_connected = false;
 	
 	set_custom_minimum_size(Vector2(0, 384));
@@ -164,6 +166,19 @@ void RecipeEditor::_create_ui() {
 	time_to_craft_spin_box->set_step(0.1);
 	time_to_craft_spin_box->set_value(1.0);
 	
+	// BLUEPRINT ONLY SECTION
+	HBoxContainer *blueprint_only_section = memnew(HBoxContainer);
+	main_vbox->add_child(blueprint_only_section);
+
+	Label *blueprint_only_label = memnew(Label);
+	blueprint_only_section->add_child(blueprint_only_label);
+	blueprint_only_label->set_custom_minimum_size(Vector2(160, 0));
+	blueprint_only_label->set_text("Blueprint Only");
+
+	blueprint_only_check_box = memnew(CheckBox);
+	blueprint_only_section->add_child(blueprint_only_check_box);
+	blueprint_only_check_box->set_tooltip_text("Not discoverable by experimenting with ingredients.");
+	
 	// CRAFT STATION TYPE SECTION (LAST)
 	HBoxContainer *station_section = memnew(HBoxContainer);
 	main_vbox->add_child(station_section);
@@ -192,6 +207,7 @@ void RecipeEditor::_connect_signals() {
 	}
 	
 	time_to_craft_spin_box->connect("value_changed", callable_mp(this, &RecipeEditor::_on_time_to_craft_changed));
+	blueprint_only_check_box->connect("toggled", callable_mp(this, &RecipeEditor::_on_blueprint_only_toggled));
 	craft_station_type_option_button->connect("item_selected", callable_mp(this, &RecipeEditor::_on_craft_station_selected));
 	new_ingredient_button->connect("pressed", callable_mp(this, &RecipeEditor::_on_new_ingredient_pressed));
 	new_product_button->connect("pressed", callable_mp(this, &RecipeEditor::_on_new_product_pressed));
@@ -206,6 +222,7 @@ void RecipeEditor::_disconnect_signals() {
 	}
 	
 	time_to_craft_spin_box->disconnect("value_changed", callable_mp(this, &RecipeEditor::_on_time_to_craft_changed));
+	blueprint_only_check_box->disconnect("toggled", callable_mp(this, &RecipeEditor::_on_blueprint_only_toggled));
 	craft_station_type_option_button->disconnect("item_selected", callable_mp(this, &RecipeEditor::_on_craft_station_selected));
 	new_ingredient_button->disconnect("pressed", callable_mp(this, &RecipeEditor::_on_new_ingredient_pressed));
 	new_product_button->disconnect("pressed", callable_mp(this, &RecipeEditor::_on_new_product_pressed));
@@ -230,6 +247,7 @@ void RecipeEditor::load_recipe(const Ref<Recipe> &p_recipe, InventoryDatabase *p
 	// Update UI with recipe data
 	id_editor->setup(database, recipe->get_id());
 	time_to_craft_spin_box->set_value(recipe->get_time_to_craft());
+	blueprint_only_check_box->set_pressed(recipe->is_blueprint_only());
 	
 	_setup_station();
 	_setup_ingredients();
@@ -437,6 +455,13 @@ void RecipeEditor::_on_id_changed(const String &p_id) {
 void RecipeEditor::_on_time_to_craft_changed(double p_value) {
 	if (recipe.is_valid()) {
 		recipe->set_time_to_craft((float)p_value);
+		emit_signal("changed");
+	}
+}
+
+void RecipeEditor::_on_blueprint_only_toggled(bool p_pressed) {
+	if (recipe.is_valid()) {
+		recipe->set_blueprint_only(p_pressed);
 		emit_signal("changed");
 	}
 }

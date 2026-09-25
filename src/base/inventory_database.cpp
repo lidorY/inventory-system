@@ -456,6 +456,8 @@ Dictionary InventoryDatabase::serialize_recipe(const Ref<Recipe> recipe) const {
 		data["required_items"] = serialize_item_stacks(recipe->get_required_items());
 	if (recipe->get_station() != nullptr)
 		data["craft_station_type"] = recipe->get_station()->get_id();
+	if (recipe->is_blueprint_only())
+		data["blueprint_only"] = true;
 
 	return data;
 }
@@ -482,6 +484,9 @@ void InventoryDatabase::deserialize_recipe(Ref<Recipe> recipe, const Dictionary 
 	if (data.has("craft_station_type")) {
 		Ref<CraftStationType> craft_station_type = get_craft_station_from_id(data["craft_station_type"]);
 		recipe->set_station(craft_station_type);
+	}
+	if (data.has("blueprint_only")) {
+		recipe->set_blueprint_only(data["blueprint_only"]);
 	}
 }
 

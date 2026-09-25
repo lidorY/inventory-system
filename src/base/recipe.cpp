@@ -13,6 +13,8 @@ void Recipe::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_ingredients"), &Recipe::get_ingredients);
 	ClassDB::bind_method(D_METHOD("set_required_items", "required_items"), &Recipe::set_required_items);
 	ClassDB::bind_method(D_METHOD("get_required_items"), &Recipe::get_required_items);
+	ClassDB::bind_method(D_METHOD("set_blueprint_only", "blueprint_only"), &Recipe::set_blueprint_only);
+	ClassDB::bind_method(D_METHOD("is_blueprint_only"), &Recipe::is_blueprint_only);
 
 	ADD_PROPERTY(PropertyInfo(Variant::STRING, "id"), "set_id", "get_id");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "products", PROPERTY_HINT_ARRAY_TYPE, vformat("%s/%s:%s", Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "ItemStack")), "set_products", "get_products");
@@ -20,6 +22,7 @@ void Recipe::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "station", PROPERTY_HINT_RESOURCE_TYPE, "CraftStationType"), "set_station", "get_station");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "ingredients", PROPERTY_HINT_ARRAY_TYPE, vformat("%s/%s:%s", Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "ItemStack")), "set_ingredients", "get_ingredients");
 	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "required_items", PROPERTY_HINT_ARRAY_TYPE, vformat("%s/%s:%s", Variant::OBJECT, PROPERTY_HINT_RESOURCE_TYPE, "ItemStack")), "set_required_items", "get_required_items");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "blueprint_only"), "set_blueprint_only", "is_blueprint_only");
 }
 
 Recipe::Recipe() {
@@ -74,4 +77,12 @@ void Recipe::set_required_items(const TypedArray<ItemStack> &new_required_items)
 
 TypedArray<ItemStack> Recipe::get_required_items() const {
 	return required_items;
+}
+
+void Recipe::set_blueprint_only(const bool &new_blueprint_only) {
+	blueprint_only = new_blueprint_only;
+}
+
+bool Recipe::is_blueprint_only() const {
+	return blueprint_only;
 }

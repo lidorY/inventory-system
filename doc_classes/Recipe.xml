@@ -10,6 +10,9 @@
 	<tutorials>
 	</tutorials>
 	<members>
+		<member name="blueprint_only" type="bool" setter="set_blueprint_only" getter="is_blueprint_only" default="false">
+			Marks a recipe that must not be discovered by experimenting with ingredients; the game teaches it another way (e.g. a blueprint item). The addon's own crafting does not read it.
+		</member>
 		<member name="id" type="String" setter="set_id" getter="get_id" default="&quot;&quot;">
 			Unique identifier of this recipe in the [InventoryDatabase]. Use [method InventoryDatabase.get_recipe_from_id] to look a recipe up by it.
 		</member>
