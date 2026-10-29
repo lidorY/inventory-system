@@ -36,6 +36,7 @@ void LootItemEditor::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("_on_min_value_value_changed", "value"), &LootItemEditor::_on_min_value_value_changed);
 	ClassDB::bind_method(D_METHOD("_on_max_value_value_changed", "value"), &LootItemEditor::_on_max_value_value_changed);
 	ClassDB::bind_method(D_METHOD("_on_bool_value_toggled", "pressed"), &LootItemEditor::_on_bool_value_toggled);
+	ClassDB::bind_method(D_METHOD("_on_string_value_text_changed", "text"), &LootItemEditor::_on_string_value_text_changed);
 
 	ADD_SIGNAL(MethodInfo("changed", PropertyInfo(Variant::OBJECT, "loot_item", PROPERTY_HINT_RESOURCE_TYPE, "LootItem")));
 }
@@ -64,6 +65,8 @@ LootItemEditor::LootItemEditor() {
 	min_value_spinbox = nullptr;
 	max_value_spinbox = nullptr;
 	bool_value_checkbox = nullptr;
+	string_value_hbox = nullptr;
+	string_value_line_edit = nullptr;
 }
 
 LootItemEditor::~LootItemEditor() {
@@ -276,8 +279,23 @@ void LootItemEditor::_create_ui() {
 	bool_value_checkbox->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 	bool_value_checkbox->connect("toggled", callable_mp(this, &LootItemEditor::_on_bool_value_toggled));
 
-	// Initially hide bool controls
+	// String value (for string type, e.g. a blueprint's recipe id)
+	string_value_hbox = memnew(HBoxContainer);
+	property_range_details_vbox->add_child(string_value_hbox);
+
+	Label *string_value_label = memnew(Label);
+	string_value_hbox->add_child(string_value_label);
+	string_value_label->set_text("String Value:");
+	string_value_label->set_custom_minimum_size(Vector2(160, 0));
+
+	string_value_line_edit = memnew(LineEdit);
+	string_value_hbox->add_child(string_value_line_edit);
+	string_value_line_edit->set_h_size_flags(Control::SIZE_EXPAND_FILL);
+	string_value_line_edit->connect("text_changed", callable_mp(this, &LootItemEditor::_on_string_value_text_changed));
+
+	// Initially hide bool and string controls
 	bool_value_hbox->set_visible(false);
+	string_value_hbox->set_visible(false);
 }
 
 void LootItemEditor::_apply_theme() {
@@ -308,6 +326,7 @@ void LootItemEditor::_apply_theme() {
 		property_type_option->add_icon_item(get_theme_icon(PropertyTypeIcons::get_icon_name_for_type(Variant::INT), "EditorIcons"), "Integer Range", 0);
 		property_type_option->add_icon_item(get_theme_icon(PropertyTypeIcons::get_icon_name_for_type(Variant::FLOAT), "EditorIcons"), "Float Range", 1);
 		property_type_option->add_icon_item(get_theme_icon(PropertyTypeIcons::get_icon_name_for_type(Variant::BOOL), "EditorIcons"), "Boolean Value", 2);
+		property_type_option->add_icon_item(get_theme_icon(PropertyTypeIcons::get_icon_name_for_type(Variant::STRING), "EditorIcons"), "String Value", 3);
 	}
 }
 
@@ -505,25 +524,26 @@ void LootItemEditor::_on_property_name_text_changed(const String &p_text) {
 	emit_signal("changed", current_item);
 }
 
+// 0 = Integer Range, 1 = Float Range, 2 = Boolean Value, 3 = String Value.
+void LootItemEditor::_show_value_controls(int p_type_index) {
+	range_values_hbox->set_visible(p_type_index == 0 || p_type_index == 1);
+	Object::cast_to<Control>(bool_value_checkbox->get_parent())->set_visible(p_type_index == 2);
+	string_value_hbox->set_visible(p_type_index == 3);
+
+	// Update step for float vs int
+	if (p_type_index == 1) { // Float type
+		min_value_spinbox->set_step(0.1);
+		max_value_spinbox->set_step(0.1);
+	} else if (p_type_index == 0) { // Integer type
+		min_value_spinbox->set_step(1);
+		max_value_spinbox->set_step(1);
+	}
+}
+
 void LootItemEditor::_on_property_type_item_selected(int p_index) {
 	// Update the visibility of different value input controls
-	if (p_index == 2) { // Boolean type
-		range_values_hbox->set_visible(false);
-		Object::cast_to<Control>(bool_value_checkbox->get_parent())->set_visible(true);
-	} else { // Integer or Float type
-		range_values_hbox->set_visible(true);
-		Object::cast_to<Control>(bool_value_checkbox->get_parent())->set_visible(false);
-		
-		// Update step for float vs int
-		if (p_index == 1) { // Float type
-			min_value_spinbox->set_step(0.1);
-			max_value_spinbox->set_step(0.1);
-		} else { // Integer type
-			min_value_spinbox->set_step(1);
-			max_value_spinbox->set_step(1);
-		}
-	}
-	
+	_show_value_controls(p_index);
+
 	// Update the selected property range configuration based on new type
 	if (current_item.is_null()) {
 		return;
@@ -552,7 +572,14 @@ void LootItemEditor::_on_property_type_item_selected(int p_index) {
 			default_value = (double)old_range_config["min"] > 0;
 		}
 		range_config["value"] = default_value;
-		bool_value_checkbox->set_pressed(default_value);
+		bool_value_checkbox->set_pressed_no_signal(default_value);
+	} else if (p_index == 3) { // String type
+		String default_value;
+		if (old_range_config.has("value") && old_range_config["value"].get_type() == Variant::STRING) {
+			default_value = old_range_config["value"];
+		}
+		range_config["value"] = default_value;
+		string_value_line_edit->set_text(default_value);
 	} else { // Integer or Float type
 		// Convert to range type
 		double min_value = 0.0;
@@ -579,10 +606,10 @@ void LootItemEditor::_on_property_type_item_selected(int p_index) {
 			range_config["max"] = max_value;
 		}
 		
-		min_value_spinbox->set_value(min_value);
-		max_value_spinbox->set_value(max_value);
+		min_value_spinbox->set_value_no_signal(min_value);
+		max_value_spinbox->set_value_no_signal(max_value);
 	}
-	
+
 	property_ranges[property_name] = range_config;
 	current_item->set_property_ranges(property_ranges);
 	_update_property_ranges_list();
@@ -695,11 +722,36 @@ void LootItemEditor::_on_bool_value_toggled(bool p_pressed) {
 	Dictionary property_ranges = current_item->get_property_ranges();
 	Dictionary range_config;
 	range_config["value"] = p_pressed;
-	
+
 	property_ranges[property_name] = range_config;
 	current_item->set_property_ranges(property_ranges);
 	_update_property_ranges_list();
-	
+
+	emit_signal("changed", current_item);
+}
+
+void LootItemEditor::_on_string_value_text_changed(const String &p_text) {
+	if (current_item.is_null()) {
+		return;
+	}
+
+	Array selected_items = property_ranges_list->get_selected_items();
+	if (selected_items.is_empty()) {
+		return;
+	}
+
+	int selected_index = selected_items[0];
+	String item_text = property_ranges_list->get_item_text(selected_index);
+	String property_name = item_text.split(":")[0];
+
+	Dictionary property_ranges = current_item->get_property_ranges();
+	Dictionary range_config;
+	range_config["value"] = p_text;
+
+	property_ranges[property_name] = range_config;
+	current_item->set_property_ranges(property_ranges);
+	_update_property_ranges_list();
+
 	emit_signal("changed", current_item);
 }
 
@@ -743,6 +795,9 @@ void LootItemEditor::_update_property_ranges_list() {
 			} else {
 				property_type = Variant::FLOAT;
 			}
+		} else if (range_config.has("value") && range_config["value"].get_type() == Variant::STRING) {
+			display_text += "\"" + String(range_config["value"]) + "\"";
+			property_type = Variant::STRING;
 		} else if (range_config.has("value")) {
 			display_text += (range_config["value"] ? "true" : "false");
 			property_type = Variant::BOOL;
@@ -793,32 +848,26 @@ void LootItemEditor::_update_property_range_details() {
 	// Update property name
 	property_name_line_edit->set_text(property_name);
 	
-	// Update property type and values
-	if (range_config.has("value")) {
+	// Update property type and values. The _no_signal setters keep showing a range from
+	// writing it back (a string value used to be saved as true just by selecting it).
+	if (range_config.has("value") && range_config["value"].get_type() == Variant::STRING) {
+		property_type_option->select(3);
+		string_value_line_edit->set_text(range_config["value"]);
+		_show_value_controls(3);
+	} else if (range_config.has("value")) {
 		// Boolean type
 		property_type_option->select(2);
-		bool_value_checkbox->set_pressed(range_config["value"]);
-		range_values_hbox->set_visible(false);
-		Object::cast_to<Control>(bool_value_checkbox->get_parent())->set_visible(true);
+		bool_value_checkbox->set_pressed_no_signal(range_config["value"]);
+		_show_value_controls(2);
 	} else if (range_config.has("min") && range_config.has("max")) {
 		// Check if values are integers or floats
 		Variant min_val = range_config["min"];
 		Variant max_val = range_config["max"];
-		
-		if (min_val.get_type() == Variant::INT && max_val.get_type() == Variant::INT) {
-			property_type_option->select(0); // Integer
-			min_value_spinbox->set_step(1);
-			max_value_spinbox->set_step(1);
-		} else {
-			property_type_option->select(1); // Float
-			min_value_spinbox->set_step(0.1);
-			max_value_spinbox->set_step(0.1);
-		}
-		
-		min_value_spinbox->set_value(min_val);
-		max_value_spinbox->set_value(max_val);
-		range_values_hbox->set_visible(true);
-		Object::cast_to<Control>(bool_value_checkbox->get_parent())->set_visible(false);
+		int type_index = min_val.get_type() == Variant::INT && max_val.get_type() == Variant::INT ? 0 : 1;
+		property_type_option->select(type_index);
+		_show_value_controls(type_index);
+		min_value_spinbox->set_value_no_signal(min_val);
+		max_value_spinbox->set_value_no_signal(max_val);
 	}
 	
 	property_range_details_vbox->set_visible(true);

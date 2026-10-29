@@ -74,6 +74,8 @@ private:
 	SpinBox *max_value_spinbox;
 	Label *bool_value_label;
 	CheckBox *bool_value_checkbox;
+	HBoxContainer *string_value_hbox;
+	LineEdit *string_value_line_edit;
 
 	void _create_ui();
 	void _apply_theme();
@@ -94,6 +96,8 @@ private:
 	void _on_min_value_value_changed(double p_value);
 	void _on_max_value_value_changed(double p_value);
 	void _on_bool_value_toggled(bool p_pressed);
+	void _on_string_value_text_changed(const String &p_text);
+	void _show_value_controls(int p_type_index);
 
 protected:
 	static void _bind_methods();
